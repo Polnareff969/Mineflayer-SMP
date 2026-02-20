@@ -1,5 +1,5 @@
 const mineflayer = require('mineflayer');
-const autoeat = require('@nxg-org/mineflayer-auto-eat').plugin;
+const autoeat = require('@nxg-org/mineflayer-auto-eat');
 const pathfinder = require('mineflayer-pathfinder').pathfinder;
 const { Movements, goals } = require('mineflayer-pathfinder');
 const Vec3 = require('vec3');
@@ -31,7 +31,8 @@ const bot = mineflayer.createBot({
 });
 
 bot.loadPlugin(pathfinder);
-bot.loadPlugin(autoeat);
+bot.loadPlugin(autoeat.plugin);
+
 
 let isFarming = false;
 const AUTH_FILE = './auth_state.json';
