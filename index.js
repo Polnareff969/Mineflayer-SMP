@@ -1,5 +1,4 @@
 const mineflayer = require('mineflayer');
-const autoeat = require('@nxg-org/mineflayer-auto-eat');
 const pathfinder = require('mineflayer-pathfinder').pathfinder;
 const { Movements, goals } = require('mineflayer-pathfinder');
 const Vec3 = require('vec3');
@@ -31,8 +30,6 @@ const bot = mineflayer.createBot({
 });
 
 bot.loadPlugin(pathfinder);
-bot.loadPlugin(autoeat.plugin);
-
 
 let isFarming = false;
 const AUTH_FILE = './auth_state.json';
@@ -41,7 +38,9 @@ const AUTH_FILE = './auth_state.json';
 function handleAuth() {
     let registered = false;
     if (fs.existsSync(AUTH_FILE)) {
-        registered = JSON.parse(fs.readFileSync(AUTH_FILE)).registered;
+        try {
+            registered = JSON.parse(fs.readFileSync(AUTH_FILE)).registered;
+        } catch (e) { registered = false; }
     }
 
     if (!registered) {
@@ -78,7 +77,7 @@ async function depositItems() {
         const chest = await bot.openContainer(bot.blockAt(pos));
         const items = chest.containerItems();
         const isClean = items.every(i => i.name === 'pumpkin');
-        
+
         if (isClean && chest.freeSlotCount() > 0) {
             for (const item of bot.inventory.items()) {
                 if (PROTECTED_ITEMS.includes(item.name)) continue;
@@ -89,13 +88,14 @@ async function depositItems() {
         } else { chest.close(); }
     }
 
-    // Barrel Overflow Logic
     const barrelItem = bot.inventory.items().find(i => i.name === 'barrel');
     if (bot.inventory.items().some(i => i.name === 'pumpkin') && barrelItem) {
         const ref = bot.blockAt(bot.entity.position.offset(0, -1, 0));
-        await bot.placeBlock(ref, new Vec3(0, 1, 0));
-        await new Promise(r => setTimeout(r, 1000));
-        await depositItems();
+        if (ref) {
+            await bot.placeBlock(ref, new Vec3(0, 1, 0));
+            await new Promise(r => setTimeout(r, 1000));
+            await depositItems();
+        }
     }
 }
 
@@ -109,7 +109,7 @@ async function warehouseCycle() {
     const chest = await bot.openContainer(collector);
     const count = chest.containerItems().filter(i => i.name === 'pumpkin').reduce((s, i) => s + i.count, 0);
 
-    if (count >= 1280) { // 20 Stacks
+    if (count >= 1280) {
         for (const i of chest.containerItems().filter(i => i.name === 'pumpkin')) await chest.withdraw(i.type, null, i.count);
         chest.close();
         await depositItems();
@@ -133,12 +133,9 @@ async function runPatrol() {
 // --- EVENTS ---
 bot.on('spawn', () => {
     handleAuth();
-    bot.autoEat.options.priority = 'saturation';
-    bot.autoEat.options.startAt = 14;
 });
 
 bot.on('playerJoined', (player) => {
-    // Only run escape if MASTER joins and bot isn't at the bunker (farming) yet
     if (player.username === MASTER && !isFarming) {
         const mcData = require('minecraft-data')(bot.version);
         bot.pathfinder.setMovements(new Movements(bot, mcData));
