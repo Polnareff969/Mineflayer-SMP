@@ -22,7 +22,7 @@ const PATROL_POINTS = [
 ];
 
 const bot = mineflayer.createBot({
-    host: 'sisiwcraft.corehost.store',
+    host: 'sg.corehost.store',
     port: 20128,
     username: 'Botbot',
     auth: 'offline',
