@@ -1,5 +1,5 @@
 const mineflayer = require('mineflayer');
-const autoeat = require('mineflayer-auto-eat').plugin;
+const autoeat = require('@nxg-org/mineflayer-auto-eat').plugin;
 const pathfinder = require('mineflayer-pathfinder').pathfinder;
 const { Movements, goals } = require('mineflayer-pathfinder');
 const Vec3 = require('vec3');
